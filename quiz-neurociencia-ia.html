@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quiz · Neurociencia aplicada a la educación e IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF3F8; --surface:#FFFFFF; --ink:#1D2B4F; --muted:#5B6B84; --line:#D3DDE9;
+  --ok:#2F7D5B; --ok-bg:#E3F2EA; --bad:#C2392F; --bad-bg:#FBE7E5; --accent:#1D2B4F;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A2E; --surface:#1B2540; --ink:#E7ECF5; --muted:#9AA8C0; --line:#2E3A58;
+    --ok:#6CC79C; --ok-bg:#183A2C; --bad:#F08A80; --bad-bg:#43201E; --accent:#E7ECF5;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A2E; --surface:#1B2540; --ink:#E7ECF5; --muted:#9AA8C0; --line:#2E3A58;
+  --ok:#6CC79C; --ok-bg:#183A2C; --bad:#F08A80; --bad-bg:#43201E; --accent:#E7ECF5;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:1.0625rem;line-height:1.55}
+main{max-width:38rem;margin:0 auto;padding:1.5rem 1.25rem 3rem}
+h1{font-family:"Bricolage Grotesque","Atkinson Hyperlegible",sans-serif;font-weight:800;font-size:clamp(1.75rem,6vw,2.4rem);line-height:1.1;margin:.5rem 0 .4rem;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 1.5rem}
+.track{display:flex;gap:6px;margin-bottom:1.25rem}
+.track span{flex:1;height:6px;border-radius:3px;background:var(--line);transition:background .25s}
+.track span.ok{background:var(--ok)}
+.track span.bad{background:var(--bad)}
+.track span.now{background:var(--muted)}
+.count{font-size:.9rem;color:var(--muted);margin:0 0 .35rem}
+.q{font-family:"Bricolage Grotesque","Atkinson Hyperlegible",sans-serif;font-weight:600;font-size:1.3rem;line-height:1.3;margin:0 0 1.1rem}
+.opts{display:grid;gap:.6rem}
+.opt{appearance:none;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:.85rem 1rem;cursor:pointer;transition:border-color .15s}
+.opt:hover:not(:disabled){border-color:var(--muted)}
+.opt:focus-visible,.btn:focus-visible{outline:3px solid var(--muted);outline-offset:2px}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.why{margin-top:1rem;padding:.9rem 1rem;border-left:4px solid var(--ok);background:var(--surface);border-radius:0 10px 10px 0}
+.why.badw{border-left-color:var(--bad)}
+.why strong{display:block;margin-bottom:.2rem}
+.btn{appearance:none;font:inherit;font-weight:700;margin-top:1.25rem;width:100%;padding:.9rem 1rem;border-radius:12px;border:none;background:var(--accent);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line);margin-top:.6rem}
+.score{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:4rem;line-height:1;margin:.5rem 0}
+.review{margin-top:1.5rem;display:grid;gap:.75rem}
+.review div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.8rem 1rem}
+.review p{margin:.2rem 0}
+.review .ans{color:var(--ok);font-weight:700}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <h1>¿Cuánto recuerdas de la charla?</h1>
+  <p class="sub">Neurociencia aplicada a la educación e IA. Elige una respuesta y revisa la explicación.</p>
+  <div class="track" id="track"></div>
+  <div id="app"></div>
+</main>
+<script>
+const Q=[
+ {q:"¿Cuál es la diferencia entre atención y concentración?",o:["Son lo mismo, solo cambia el nombre","La atención es involuntaria y la concentración es voluntaria","La atención es voluntaria y la concentración es involuntaria","La concentración solo sirve para estudiar"],a:1,e:"La atención capta estímulos del entorno sin que lo decidas. La concentración es decidir mantener el foco en una sola tarea."},
+ {q:"Según la charla, ¿cuál es el mejor entrenamiento para la mente?",o:["Hacer más Pomodoros al día","Leer en voz alta","Meditar","Usar apps de productividad"],a:2,e:"Meditar entrena a notar cuando la atención se fue y traerla de vuelta, que es justamente concentrarse."},
+ {q:"¿Cuál es la mayor distracción hoy en día?",o:["El ruido de la casa","Las redes sociales, por la hiperconectividad","La familia","El cansancio"],a:1,e:"La hiperconectividad pone todo al alcance al instante, como le pasa a Mar con su móvil."},
+ {q:"En la técnica Pomodoro clásica, ¿qué forma una serie?",o:["Un bloque de 25 minutos","Dos rondas de 25-5","Cuatro rondas de 25 min de foco + 5 de descanso","Una hora seguida de estudio"],a:2,e:"25-5, 25-5, 25-5, 25-5 es una serie. Más de 2 series al día ya es desgaste mental."},
+ {q:"Estás muy cansado pero quieres estudiar. Según la charla, ¿qué haces?",o:["Hacer 50 minutos seguidos para terminar rápido","Adaptar el Pomodoro, por ejemplo 10 min de foco + 5 de descanso","No estudiar nunca cansado","Estudiar con música y redes abiertas"],a:1,e:"El Pomodoro se adapta a tu día. Lo que no cambia es que el descanso sea real: cero redes."},
+ {q:"¿Por qué afecta dormirse haciendo scroll?",o:["Porque gasta batería","Porque impide segregar bien las hormonas del descanso","Porque da hambre","No afecta si es contenido educativo"],a:1,e:"El scroll antes de dormir afecta las hormonas que permiten un buen descanso, y sin descanso no hay buen aprendizaje."},
+ {q:"¿Cómo deben ser las metas de cada sesión de estudio?",o:["Lo más difíciles posible","Fáciles para no frustrarse","Claras, retadoras y alcanzables","No hace falta ponerse metas"],a:2,e:"Cada bloque necesita un objetivo claro, que rete pero que se pueda lograr."},
+ {q:"Luis repite el texto sin entenderlo. ¿Qué debería hacer primero?",o:["Hacer un resumen de inmediato","Leer de forma comprensiva y traducirlo a sus palabras","Memorizar palabra por palabra","Pedirle a la IA el resumen"],a:1,e:"El resumen va después de entender. Si resumes sin comprender, el resumen queda sin contexto y no sirve."},
+ {q:"¿Cuáles son los tres hábitos clave para aprender mejor?",o:["Comer bien, dormir bien y moverse","Leer, escribir y repasar","Meditar, estudiar y descansar","Tomar café, dormir y estudiar"],a:0,e:"Comer bien (no comida rápida diaria), dormir bien y moverse: caminar, ejercicio o gimnasio."},
+ {q:"¿Por qué no conviene que la IA escriba por nosotros?",o:["Porque es lenta","Porque nuestra forma de escribir es nuestra marca personal","Porque siempre se equivoca","Porque está prohibida en la universidad"],a:1,e:"Tu manera de escribir te identifica. Además, la IA puede tener sesgos y lo que da hay que verificarlo."},
+ {q:"¿Qué significa la frase de Iñaki Gabilondo sobre las inundaciones y el agua potable?",o:["Que hay que cuidar el agua","Que con exceso de información y fake news escasea la información confiable","Que la IA consume mucha agua","Que hay que leer menos"],a:1,e:"La inundación es el exceso de información y fake news; el agua potable es la información confiable."},
+ {q:"Según la charla, ¿qué es lo que más preocupa del uso de la IA?",o:["Que sea cara","Perder la capacidad de escribir y analizar","Que reemplace a los profesores","Que no funcione en el celular"],a:1,e:"Depender de la IA puede hacernos perder la escritura propia y el análisis crítico."}
+];
+let i=0,res=[];
+const app=document.getElementById('app'),track=document.getElementById('track');
+function drawTrack(){track.innerHTML=Q.map((_,k)=>`<span class="${res[k]===true?'ok':res[k]===false?'bad':k===i?'now':''}"></span>`).join('')}
+function show(){
+  drawTrack();
+  const it=Q[i];
+  app.innerHTML=`<p class="count">Pregunta ${i+1} de ${Q.length}</p><p class="q">${it.q}</p><div class="opts">${it.o.map((t,k)=>`<button class="opt" data-k="${k}">${t}</button>`).join('')}</div><div id="fb"></div>`;
+  app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>pick(+b.dataset.k));
+  app.querySelector('.opt').focus({preventScroll:true});
+}
+function pick(k){
+  const it=Q[i],ok=k===it.a;res[i]=ok;
+  app.querySelectorAll('.opt').forEach((b,j)=>{b.disabled=true;if(j===it.a)b.classList.add('right');else if(j===k)b.classList.add('wrong')});
+  const last=i===Q.length-1;
+  document.getElementById('fb').innerHTML=`<div class="why ${ok?'':'badw'}"><strong>${ok?'Correcto':'No es esa'}</strong>${it.e}</div><button class="btn" id="next">${last?'Ver resultado':'Siguiente pregunta'}</button>`;
+  drawTrack();
+  const n=document.getElementById('next');n.focus({preventScroll:true});
+  n.onclick=()=>{if(last)end();else{i++;show()}};
+}
+function end(){
+  drawTrack();
+  const good=res.filter(Boolean).length,bad=Q.map((q,k)=>[q,k]).filter(([,k])=>!res[k]);
+  const msg=good===Q.length?'Perfecto, dominas la charla.':good>=Q.length*0.7?'Muy bien. Repasa las que fallaste.':'Vale la pena darle otra leída al resumen en Notion.';
+  app.innerHTML=`<p class="count">Tu resultado</p><p class="score">${good}/${Q.length}</p><p>${msg}</p>${bad.length?`<div class="review">${bad.map(([q])=>`<div><p>${q.q}</p><p class="ans">${q.o[q.a]}</p></div>`).join('')}</div>`:''}<button class="btn" id="again">Repetir el quiz</button>`;
+  document.getElementById('again').onclick=()=>{i=0;res=[];show()};
+}
+show();
+</script>
+</body>
+</html>
